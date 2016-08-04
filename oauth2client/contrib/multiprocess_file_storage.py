@@ -186,7 +186,7 @@ def _write_credentials_file(credentials_file, credentials):
     credentials_file.truncate()
 
 
-class _MultiprocessStorageBackend(object):
+class MultiprocessStorageBackend(object):
     """Thread-local backend for multiprocess storage.
 
     Each process has only one instance of this backend per file. All threads
@@ -288,6 +288,14 @@ class _MultiprocessStorageBackend(object):
         self._credentials.pop(key, None)
         self._write_credentials()
 
+    def locked_clear_credentials(self):
+        """Clear stored credentials and return them to the caller."""
+        self._load_credentials()
+        credentials = self._credentials
+        self.credentials = {}
+        self._write_credentials
+        return credentials
+
 
 def _get_backend(filename):
     """A helper method to get or create a backend with thread locking.
@@ -299,13 +307,13 @@ def _get_backend(filename):
         filename: The full path to the credential storage file.
 
     Returns:
-        An instance of :class:`_MultiprocessStorageBackend`.
+        An instance of :class:`MultiprocessStorageBackend`.
     """
     filename = os.path.abspath(filename)
 
     with _backends_lock:
         if filename not in _backends:
-            _backends[filename] = _MultiprocessStorageBackend(filename)
+            _backends[filename] = MultiprocessStorageBackend(filename)
         return _backends[filename]
 
 
